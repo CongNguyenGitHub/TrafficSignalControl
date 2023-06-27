@@ -28,15 +28,23 @@ class PGAgent(Agent):
         return action 
     
     def learn(self,env,max_num_episodes):
-        all_rewards=[]
-        reward_buffer=deque(maxlen=5)#store reward last 5 episode
+        maxlen=5
+        #store all information in training
+        total_rewards=[]
+        total_waiting=[]
+        total_queued=[]
+    
         policy_optimizer=torch.optim.Adam(self.policy_net.parameters(),lr=self.alpha)
         value_optimizer=torch.optim.Adam(self.value_net.parameters(),lr=self.alpha)
         
         for episode in range(max_num_episodes):
             state=env.reset()
             done=False
-            reward_per_episode=0
+
+            reward_per_step=[]
+            waiting_per_step=[]
+            queued_per_step=[]
+            
             states=[]
             actions=[]
             rewards=[]
@@ -49,8 +57,11 @@ class PGAgent(Agent):
                 rewards.append(reward)
                 #Update current state
                 state=next_state
-                reward_per_episode+=reward
-
+                
+                #Get information current state
+                reward_per_step.append(reward)
+                waiting_per_step.append(env.get_total_accumulated_waiting_time())
+                queued_per_step.append(env.get_total_queued())
             #Using formulation R(t)=r+gamma*r(t+1)
             returns=[]
             discounted_reward=0
@@ -80,8 +91,7 @@ class PGAgent(Agent):
             policy_loss=(-torch.log(actions_prob)*(returns-values)).sum()
             
             #Minimize the policy loss
-            policy_optimizer.zero_grad()
-            policy_loss=(-torch.log(actions_prob)*(returns-values)).sum()    
+            policy_optimizer.zero_grad()   
             policy_loss.backward(retain_graph=True)
             policy_optimizer.step()
             
@@ -92,13 +102,19 @@ class PGAgent(Agent):
             value_optimizer.zero_grad()
             value_loss.backward()
             value_optimizer.step()
+            
+            #Caculate average
+            average_reward=np.mean(reward_per_step)
+            average_waiting=np.mean(waiting_per_step)
+            average_queued=np.mean(queued_per_step)
+            
+            #Insert it
+            total_rewards.append((episode,average_reward))
+            total_waiting.append((episode,average_waiting))
+            total_queued.append((episode,average_queued))
 
-            all_rewards.append(reward_per_episode)
-            reward_buffer.append(reward_per_episode)
-            if ((episode+1)%reward_buffer.maxlen==0):
-                average_reward=np.mean(reward_buffer)
-                print(f'Episode :{episode} Average reward: {average_reward}')
-        return all_rewards
+            print(f'Episode :{episode} Average reward: {average_reward} Average waiting: {average_waiting} Average queued {average_queued} ')
+        return total_rewards,total_waiting,total_queued
 class QAgent(Agent):
     def __init__(self,alpha=1e-5,gamma=0.99,num_actions=4,max_epsilon=1,min_epsilon=0.01,epsilon_decay=1e-4,batch_size=16,target_update_frequency=10):          
         super().__init__(alpha,gamma,num_actions)
@@ -118,13 +134,19 @@ class QAgent(Agent):
         return best_action
 
     def learn(self,env,max_num_episodes):
-        all_rewards=[]
-        reward_buffer=deque(maxlen=5)#store reward last 5 episode
+        total_rewards=[]
+        total_waiting=[]
+        total_queued=[]
+
         self.target_net.load_state_dict(self.q_net.state_dict())
-        self.optimizer=torch.optim.Adam(self.q_net.parameters(),lr=self.alpha)
+        optimizer=torch.optim.Adam(self.q_net.parameters(),lr=self.alpha)
         for episode in range(max_num_episodes):
             state=env.reset()
-            reward_per_episode=0
+            
+            reward_per_step=[]
+            waiting_per_step=[]
+            queued_per_step=[]
+
             done=False
             while not done:
                 #Choose action base on epsilon greedy
@@ -140,7 +162,12 @@ class QAgent(Agent):
                 self.memory.append(experience)
                 #Update state to next state
                 state=next_state
-                reward_per_episode+=reward
+
+                reward_per_step.append(reward)
+                waiting_per_step.append(env.get_total_accumulated_waiting_time())
+                queued_per_step.append(env.get_total_queued())
+
+
                 if len(self.memory)>self.batch_size:
                     #Sample batch from experience
                     experiences=random.sample(self.memory,self.batch_size)
@@ -171,9 +198,9 @@ class QAgent(Agent):
                     loss=torch.nn.functional.mse_loss(action_q_values,targets)
                     
                     #Minimize the loss
-                    self.optimizer.zero_grad()
+                    optimizer.zero_grad()
                     loss.backward()
-                    self.optimizer.step()
+                    optimizer.step()
                 #Decay epsilon over steps
                 if self.max_epsilon > self.min_epsilon:
                     self.max_epsilon-=self.epsilon_decay
@@ -181,9 +208,15 @@ class QAgent(Agent):
             #Update target_net after specific num_episodes
             if (episode+1)%self.target_update_frequency==0:
                 self.target_net.load_state_dict(self.q_net.state_dict())
-            reward_buffer.append(reward_per_episode)
-            all_rewards.append(reward_per_episode)
-            if (episode+1)%reward_buffer.maxlen==0:
-                average_reward=np.mean(reward_buffer)
-                print(f'Episode :{episode} Average reward: {average_reward}')
-        return all_rewards
+            #Caculate average
+            average_reward=np.mean(reward_per_step)
+            average_waiting=np.mean(waiting_per_step)
+            average_queued=np.mean(queued_per_step)
+
+            #Insert it
+            total_rewards.append((episode,average_reward))
+            total_waiting.append((episode,average_waiting))
+            total_queued.append((episode,average_queued))
+
+            print(f'Episode :{episode} Average reward: {average_reward} Average waiting: {average_waiting} Average queued {average_queued} ')
+        return total_rewards,total_waiting,total_queued

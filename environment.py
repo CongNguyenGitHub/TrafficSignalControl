@@ -3,7 +3,6 @@ import numpy as np
 import gymnasium as gym
 import random 
 from generator import TrafficGenerator
-
 class SUMOEnvironment():
     def __init__(self,num_seconds=500,change_frequency=20,num_cars=500,max_num_seconds_generate_cars=500):
         self.num_seconds=num_seconds
@@ -40,6 +39,10 @@ class SUMOEnvironment():
         return self.get_state(),reward,self.done
     def just_starting(self):
         return self.current_screen is None 
+    def get_total_accumulated_waiting_time(self):
+        return self.env.get_total_accumulated_waiting_time()
+    def get_total_queued(self):
+        return self.env.get_total_queued()
     def get_state(self):
         if self.just_starting() or self.done:
             self.current_screen=self.get_processed_screen()
@@ -50,6 +53,8 @@ class SUMOEnvironment():
             s2=self.get_processed_screen()
             self.current_screen=s2
             return s2-s1
+    
+
     def get_processed_screen(self):
         screen=self.env.render()
         width,height,_=screen.shape
