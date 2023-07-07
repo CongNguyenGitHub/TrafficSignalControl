@@ -113,7 +113,7 @@ class PGAgent(Agent):
             total_waiting.append((episode,average_waiting))
             total_queued.append((episode,average_queued))
 
-            f.write(f'Episode :{episode+1} || Average reward: {average_reward} || Average waiting: {average_waiting} || Average queued {average_queued}\n')
+            f.write(f'Episode {episode+1} || Average reward: {average_reward} || Average waiting: {average_waiting} || Average queued: {average_queued}\n')
         f.close()
         return total_rewards,total_waiting,total_queued
 class QAgent(Agent):
@@ -220,6 +220,6 @@ class QAgent(Agent):
             total_waiting.append((episode,average_waiting))
             total_queued.append((episode,average_queued))
 
-            f.write(f'Episode :{episode+1} || Average reward: {average_reward} || Average waiting: {average_waiting} || Average queued {average_queued}\n')
+            f.write(f'Episode {episode+1} || Average reward: {average_reward} || Average waiting: {average_waiting} || Average queued: {average_queued}\n')
         f.close()
         return total_rewards,total_waiting,total_queued
