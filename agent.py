@@ -33,7 +33,7 @@ class PGAgent(Agent):
         total_rewards=[]
         total_waiting=[]
         total_queued=[]
-    
+        f=open("PG_Output.txt","w") 
         policy_optimizer=torch.optim.Adam(self.policy_net.parameters(),lr=self.alpha)
         value_optimizer=torch.optim.Adam(self.value_net.parameters(),lr=self.alpha)
         
@@ -113,7 +113,8 @@ class PGAgent(Agent):
             total_waiting.append((episode,average_waiting))
             total_queued.append((episode,average_queued))
 
-            print(f'Episode :{episode} Average reward: {average_reward} Average waiting: {average_waiting} Average queued {average_queued} ')
+            f.write(f'Episode :{episode+1} || Average reward: {average_reward} || Average waiting: {average_waiting} || Average queued {average_queued}\n')
+        f.close()
         return total_rewards,total_waiting,total_queued
 class QAgent(Agent):
     def __init__(self,alpha=1e-5,gamma=0.99,num_actions=4,max_epsilon=1,min_epsilon=0.01,epsilon_decay=1e-4,batch_size=16,target_update_frequency=10):          
@@ -137,6 +138,7 @@ class QAgent(Agent):
         total_rewards=[]
         total_waiting=[]
         total_queued=[]
+        f=open("QL_Output.txt","w")
 
         self.target_net.load_state_dict(self.q_net.state_dict())
         optimizer=torch.optim.Adam(self.q_net.parameters(),lr=self.alpha)
@@ -218,5 +220,6 @@ class QAgent(Agent):
             total_waiting.append((episode,average_waiting))
             total_queued.append((episode,average_queued))
 
-            print(f'Episode :{episode} Average reward: {average_reward} Average waiting: {average_waiting} Average queued {average_queued} ')
+            f.write(f'Episode :{episode+1} || Average reward: {average_reward} || Average waiting: {average_waiting} || Average queued {average_queued}\n')
+        f.close()
         return total_rewards,total_waiting,total_queued

@@ -1,0 +1,2 @@
+Episode :1 || Average reward: -2.0834999999999995 || Average waiting: 84.01369999999999 || Average queued 93.72
+Episode :2 || Average reward: -2.5107 || Average waiting: 126.1746 || Average queued 117.74
