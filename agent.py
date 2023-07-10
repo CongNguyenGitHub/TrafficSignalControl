@@ -122,7 +122,7 @@ class QAgent(Agent):
         super().__init__(alpha,gamma,num_actions)
         self.q_net=QNetwork(num_actions)
         self.target_net=QNetwork(num_actions)
-        self.memory=deque(maxlen=20000)
+        self.memory=deque(maxlen=5000)
         self.max_epsilon=max_epsilon
         self.min_epsilon=min_epsilon
         #decay epsilon over steps
@@ -207,7 +207,7 @@ class QAgent(Agent):
                 #Decay epsilon over steps
                 if self.max_epsilon > self.min_epsilon:
                     self.max_epsilon-=self.epsilon_decay
-                else: self.max_epsilon=self.min_epsolon
+                else: self.max_epsilon=self.min_epsilon
             #Update target_net after specific num_episodes
             if (episode+1)%self.target_update_frequency==0:
                 self.target_net.load_state_dict(self.q_net.state_dict())
