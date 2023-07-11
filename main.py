@@ -2,16 +2,16 @@ from environment import SUMOEnvironment
 from agent import  QAgent, PGAgent
 import numpy as np
 import matplotlib.pyplot as plt
-print("---------------------Deep Value-function Based------------------------")
-env=SUMOEnvironment()
-agent=QAgent()
-total_rewards_2,total_waiting_2,total_queued_2=np.array(agent.learn(env,200))
 
 print("-----------------------Deep Policy Gradient---------------------------")
 env=SUMOEnvironment()
 agent=PGAgent()
-total_rewards_1,total_waiting_1,total_queued_1=np.array(agent.learn(env,200))
+total_rewards_1,total_waiting_1,total_queued_1=np.array(agent.learn(env,300))
 
+print("---------------------Deep Value-function Based------------------------")
+env=SUMOEnvironment()
+agent=QAgent()
+total_rewards_2,total_waiting_2,total_queued_2=np.array(agent.learn(env,300))
 
 plt.xlabel('Training episodes')
 plt.ylabel('Average Reward per Simulation')
